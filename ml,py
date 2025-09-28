@@ -1,0 +1,39 @@
+from PIL import Image
+
+def get_n_lsb(value, n):
+    """Return the n least significant bits of 'value' as a list of bits."""
+    return [(value >> i) & 1 for i in reversed(range(n))]
+
+def decode_lsb(image_path, coords):
+    try:
+        img = Image.open("C:\Users\cloud\Documents\WhatsApp Image 2025-08-13 at 16.00.24_0c4a4256.jpg").convert("RGB")
+    except FileNotFoundError:
+        raise FileNotFoundError(f"File not found: {"C:\Users\cloud\Documents\WhatsApp Image 2025-08-13 at 16.00.24_0c4a4256.jpg"}")
+
+    pixels = img.load()
+    width, height = img.size
+
+    if len(coords) != 3:
+        raise ValueError("You must provide exactly 3 coordinates.")
+
+    for x, y in coords:
+        if not (0 <= x < width and 0 <= y < height):
+            raise ValueError(f"Coordinate ({x}, {y}) is out of image bounds ({width}x{height})")
+
+    bits = []
+    for (x, y) in coords:
+        r, g, b = pixels[x, y]
+        bits.extend(get_n_lsb(r, 4))
+        bits.extend(get_n_lsb(g, 4))
+        bits.extend(get_n_lsb(b, 4))
+
+    if len(bits) < 36:
+        raise ValueError(f"Not enough bits to decode: got {len(bits)}, expected 36")
+
+    digits = ""
+    for i in range(0, 36, 4):
+        digit_bits = bits[i:i+4]
+        digits += str(int("".join(str(b) for b in digit_bits), 2))
+
+    print("🔓 Decoded 9-digit code:", digits)
+    return digits
